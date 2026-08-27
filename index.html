@@ -1,1 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Selah — Be Still</title>
 
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1F2A44">
+<meta name="description" content="360 Bible verses in English (KJV) and modern Taglish. Be still, and know.">
+
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
+
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/apple-touch-icon-152.png">
+<link rel="apple-touch-icon" sizes="144x144" href="icons/apple-touch-icon-144.png">
+<link rel="apple-touch-icon" sizes="120x120" href="icons/apple-touch-icon-120.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Selah">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<style>
+  :root {
+    --bg: #FBF8F2;
+    --card: #ffffff;
+    --ink: #1F2A44;
+    --muted: #6b7280;
+    --accent: #C9A227;
+    --accent-dark: #8a6d3b;
+    --accent-light: #f6ecd0;
+    --border: #e6ddc9;
+    --header-bg: #1F2A44;
+    --header-text: #ffffff;
+    --header-muted: #cfd3dc;
+    --spot-bg: #1F2A44;
+    --spot-text: #ffffff;
+    color-scheme: light;
+  }
+  body.dark {
+    --bg: #14192b;
+    --card: #1e2540;
+    --ink: #ece9df;
+    --muted: #9aa0b4;
+    --accent: #e0b93f;
+    --accent-dark: #f0cf6f;
+    --accent-light: #33301c;
+    --border: #333c5c;
+    --header-bg: #0d1120;
+    --header-text: #f1f0ea;
+    --header-muted: #9aa0b4;
+    --spot-bg: #0d1120;
+    --spot-text: #f1f0ea;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+  header {
+    padding: 20px 20px 16px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--header-bg);
+    color: var(--header-text);
+    position: relative;
+    transition: background 0.25s ease;
+  }
+  .theme-toggle {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.08);
+    color: var(--header-text);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .theme-toggle:active { transform: scale(0.92); }
+  .logo-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+  .logo-mark img {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    display: block;
+  }
+  header p {
+    margin: 6px 0 0;
+    color: var(--header-muted);
+    font-size: 12px;
+    font-family: -apple-system, sans-serif;
+  }
+  #installBtn {
+    display: none;
+    margin: 10px auto 0;
+    padding: 8px 16px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #1F2A44;
+    font-weight: bold;
+    border-radius: 20px;
+    font-size: 13px;
+    font-family: -apple-system, sans-serif;
+    cursor: pointer;
+  }
+  .ios-hint {
+    display: none;
+    max-width: 500px;
+    margin: 10px auto 0;
+    padding: 10px 14px;
+    background: #2a3757;
+    color: #e6e9f0;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: -apple-system, sans-serif;
+    line-height: 1.5;
+  }
+  .controls {
+    max-width: 700px;
+    margin: 16px auto 0;
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .row { display: flex; gap: 8px; }
+  input[type="search"] {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--card);
+    color: var(--ink);
+  }
+  select {
+    padding: 10px 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--card);
+    color: var(--ink);
+    font-family: inherit;
+  }
+  button.action {
+    padding: 10px 14px;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  button.action:active { transform: scale(0.98); }
+  button.ghost {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .lang-toggle {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    font-family: -apple-system, sans-serif;
+  }
+  .lang-toggle button {
+    flex: 1;
+    padding: 9px 6px;
+    border: none;
+    background: var(--card);
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .lang-toggle button.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: bold;
+  }
+  .count-bar {
+    max-width: 700px;
+    margin: 10px auto 0;
+    padding: 0 16px;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: -apple-system, sans-serif;
+  }
+  #list {
+    max-width: 700px;
+    margin: 10px auto 40px;
+    padding: 0 16px;
+    display: grid;
+    gap: 12px;
+  }
+  .verse-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .verse-ref {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-dark);
+    margin-bottom: 6px;
+    letter-spacing: 0.2px;
+    font-family: -apple-system, sans-serif;
+  }
+  .verse-text { font-size: 16px; line-height: 1.6; margin: 0 0 8px; }
+  mark {
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    padding: 0 2px;
+    border-radius: 3px;
+    font-weight: bold;
+  }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .tag {
+    font-size: 11px;
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-family: -apple-system, sans-serif;
+  }
+  .empty { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 14px; }
+  .spotlight { max-width: 700px; margin: 20px auto 0; padding: 0 16px; }
+  .spotlight-card {
+    background: var(--spot-bg);
+    color: var(--spot-text);
+    border-radius: 12px;
+    padding: 26px 22px;
+    text-align: center;
+    transition: background 0.25s ease;
+  }
+  .spotlight-card .verse-ref { color: var(--accent); }
+  .spotlight-card .verse-text { color: var(--spot-text); font-size: 18px; }
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: -apple-system, sans-serif;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle day/night mode">🌙</button>
+  <div class="logo-mark">
+    <img src="icons/icon-192.png" alt="Selah logo">
+  </div>
+  <p>Full KJV Bible &middot; Taglish for 360 featured verses</p>
+  <button id="installBtn">Install Selah app</button>
+  <div class="ios-hint" id="iosHint">To install: tap the Share icon in Safari, then "Add to Home Screen".</div>
+</header>
+
+<div class="spotlight">
+  <div class="spotlight-card">
+    <div class="verse-ref" id="spot-ref"></div>
+    <p class="verse-text" id="spot-text"></p>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="lang-toggle">
+    <button id="lang-en" class="active">English (KJV)</button>
+    <button id="lang-tl">Taglish</button>
+  </div>
+  <input type="search" id="search" placeholder="Search verses, books, or keywords&hellip;">
+  <div class="row">
+    <select id="bookFilter"><option value="">All books</option></select>
+    <button class="action" id="randomBtn">Random</button>
+    <button class="ghost" id="clearBtn">Clear</button>
+  </div>
+</div>
+
+<div class="count-bar">
+  <span id="countLabel"></span>
+  <span id="totalLabel">31,102 verses total</span>
+</div>
+
+<div id="list"></div>
+
+<footer>Selah &middot; Full KJV Bible (31,102 verses, public domain) &middot; Taglish paraphrase for 360 featured verses</footer>
+
+<script src="selah_data.js"></script>
+<script>
+function parseRef(ref) {
+  const m = ref.match(/^(.*)\s(\d+):(\d+)$/);
+  return m ? { book: m[1], chapter: +m[2], verse: +m[3] } : { book: '', chapter: 0, verse: 0 };
+}
+
+const VERSES = VERSES_FULL.map(v => {
+  const p = parseRef(v.r);
+  return {
+    ref: v.r,
+    text: v.t,
+    taglish: v.tl || null,
+    tags: v.tg || [],
+    book: p.book,
+    chapter: p.chapter,
+    verse: p.verse,
+    featured: !!v.tl
+  };
+});
+const FEATURED = VERSES.filter(v => v.featured);
+const RESULT_CAP = 150;
+
+let lang = 'en';
+const listEl = document.getElementById('list');
+const searchEl = document.getElementById('search');
+const bookFilterEl = document.getElementById('bookFilter');
+const countLabel = document.getElementById('countLabel');
+const spotRef = document.getElementById('spot-ref');
+const spotText = document.getElementById('spot-text');
+const langEnBtn = document.getElementById('lang-en');
+const langTlBtn = document.getElementById('lang-tl');
+
+function textFor(v) {
+  return lang === 'tl' ? (v.taglish || v.text) : v.text;
+}
+
+function populateBooks() {
+  const seen = new Set();
+  const books = [];
+  VERSES.forEach(v => { if (!seen.has(v.book)) { seen.add(v.book); books.push(v.book); } });
+  books.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b;
+    opt.textContent = b;
+    bookFilterEl.appendChild(opt);
+  });
+}
+
+function tightRef(s) {
+  // fully squashed version for typo-tolerant ref search, e.g. "john316" or "john 3 16"
+  return s.toLowerCase().replace(/[\s:.,]/g, '');
+}
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function highlight(text, q) {
+  if (!q) return escapeHtml(text);
+  const idx = text.toLowerCase().indexOf(q.toLowerCase());
+  if (idx === -1) return escapeHtml(text);
+  return escapeHtml(text.slice(0, idx)) +
+    '<mark>' + escapeHtml(text.slice(idx, idx + q.length)) + '</mark>' +
+    escapeHtml(text.slice(idx + q.length));
+}
+
+function render() {
+  const qRaw = searchEl.value.trim();
+  const q = qRaw.toLowerCase();
+  const qTight = tightRef(qRaw);
+  const book = bookFilterEl.value;
+  const hasQuery = qRaw.length > 0;
+
+  let filtered;
+  if (!hasQuery && !book) {
+    // Default browse view: the 360 featured verses (curated, tagged, Taglish-ready)
+    filtered = FEATURED;
+  } else {
+    filtered = VERSES.filter(v => {
+      const matchesBook = !book || v.book === book;
+      if (!matchesBook) return false;
+      if (!hasQuery) return true;
+      const refTight = tightRef(v.ref);
+      return (
+        v.text.toLowerCase().includes(q) ||
+        (v.taglish && v.taglish.toLowerCase().includes(q)) ||
+        v.ref.toLowerCase().includes(q) ||
+        v.book.toLowerCase().includes(q) ||
+        (qTight.length >= 2 && refTight.includes(qTight)) ||
+        v.tags.some(t => t.toLowerCase().includes(q))
+      );
+    });
+
+    if (hasQuery) {
+      filtered.sort((a, b) => {
+        const score = (v) => {
+          const refL = v.ref.toLowerCase();
+          const refT = tightRef(v.ref);
+          if (refL === q || refT === qTight) return 0;
+          if (refL.startsWith(q) || refT.startsWith(qTight)) return 1;
+          if (refL.includes(q) || refT.includes(qTight)) return 2;
+          return 3;
+        };
+        return score(a) - score(b);
+      });
+    } else {
+      // book filter only, no query: keep canonical chapter/verse order
+      filtered = filtered.slice().sort((a, b) => a.chapter - b.chapter || a.verse - b.verse);
+    }
+  }
+
+  const totalMatches = filtered.length;
+  const capped = filtered.slice(0, RESULT_CAP);
+
+  countLabel.textContent = capped.length + (totalMatches > capped.length ? ' of ' + totalMatches + ' shown' : ' shown');
+  listEl.innerHTML = '';
+
+  if (capped.length === 0) {
+    listEl.innerHTML = '<div class="empty">No verses match your search.</div>';
+    return;
+  }
+
+  capped.forEach(v => {
+    const card = document.createElement('div');
+    card.className = 'verse-card';
+    const tagsHtml = v.tags.map(t => '<span class="tag">' + t + '</span>').join('');
+    const bodyText = textFor(v);
+    card.innerHTML =
+      '<div class="verse-ref">' + highlight(v.ref, qRaw) + '</div>' +
+      '<p class="verse-text">' + highlight(bodyText, qRaw) + '</p>' +
+      '<div class="tags">' + tagsHtml + '</div>';
+    listEl.appendChild(card);
+  });
+
+  if (totalMatches > capped.length) {
+    const note = document.createElement('div');
+    note.className = 'empty';
+    note.textContent = 'Showing first ' + RESULT_CAP + ' of ' + totalMatches + ' matches — refine your search for more specific results.';
+    listEl.appendChild(note);
+  }
+}
+
+function showRandomSpotlight() {
+  const v = FEATURED[Math.floor(Math.random() * FEATURED.length)];
+  spotRef.textContent = v.ref;
+  spotText.textContent = textFor(v);
+}
+
+document.getElementById('randomBtn').addEventListener('click', showRandomSpotlight);
+document.getElementById('clearBtn').addEventListener('click', () => {
+  searchEl.value = '';
+  bookFilterEl.value = '';
+  render();
+});
+searchEl.addEventListener('input', render);
+searchEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    searchEl.blur();
+    listEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+});
+bookFilterEl.addEventListener('change', render);
+
+langEnBtn.addEventListener('click', () => {
+  lang = 'en';
+  langEnBtn.classList.add('active');
+  langTlBtn.classList.remove('active');
+  showRandomSpotlight();
+  render();
+});
+langTlBtn.addEventListener('click', () => {
+  lang = 'tl';
+  langTlBtn.classList.add('active');
+  langEnBtn.classList.remove('active');
+  showRandomSpotlight();
+  render();
+});
+
+populateBooks();
+showRandomSpotlight();
+render();
+
+// --- Theme (day/night) toggle ---
+const themeToggle = document.getElementById('themeToggle');
+function applyTheme(theme) {
+  if (theme === 'dark') {
+    document.body.classList.add('dark');
+    themeToggle.textContent = '☀️';
+    themeToggle.setAttribute('title', 'Switch to day mode');
+  } else {
+    document.body.classList.remove('dark');
+    themeToggle.textContent = '🌙';
+    themeToggle.setAttribute('title', 'Switch to night mode');
+  }
+}
+function getPreferredTheme() {
+  const saved = localStorage.getItem('selah-theme');
+  if (saved === 'dark' || saved === 'light') return saved;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+let currentTheme = getPreferredTheme();
+applyTheme(currentTheme);
+themeToggle.addEventListener('click', () => {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('selah-theme', currentTheme);
+  applyTheme(currentTheme);
+});
+// Follow system changes only if the user hasn't chosen manually
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+  if (!localStorage.getItem('selah-theme')) {
+    currentTheme = e.matches ? 'dark' : 'light';
+    applyTheme(currentTheme);
+  }
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = 'inline-block';
+});
+installBtn.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  installBtn.style.display = 'none';
+});
+window.addEventListener('appinstalled', () => {
+  installBtn.style.display = 'none';
+});
+
+const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+const isInStandaloneMode = ('standalone' in window.navigator) && window.navigator.standalone;
+if (isIos && !isInStandaloneMode) {
+  document.getElementById('iosHint').style.display = 'block';
+}
+</script>
+
+</body>
+</html>
