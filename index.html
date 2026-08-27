@@ -207,6 +207,25 @@
     color: #fff;
     font-weight: bold;
   }
+  .book-suggestions {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: -2px;
+  }
+  .book-suggestions.show { display: flex; }
+  .book-chip {
+    padding: 6px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--accent);
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    font-size: 12px;
+    font-family: -apple-system, sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .book-chip:active { transform: scale(0.96); }
   .count-bar {
     max-width: 700px;
     margin: 10px auto 0;
@@ -302,6 +321,7 @@
     <button id="lang-tl">Taglish</button>
   </div>
   <input type="search" id="search" placeholder="Search verses, books, or keywords&hellip;">
+  <div class="book-suggestions" id="bookSuggestions"></div>
   <div class="row">
     <select id="bookFilter"><option value="">All books</option></select>
     <button class="action" id="randomBtn">Random</button>
@@ -345,6 +365,7 @@ let lang = 'en';
 const listEl = document.getElementById('list');
 const searchEl = document.getElementById('search');
 const bookFilterEl = document.getElementById('bookFilter');
+const bookSuggestionsEl = document.getElementById('bookSuggestions');
 const countLabel = document.getElementById('countLabel');
 const spotRef = document.getElementById('spot-ref');
 const spotText = document.getElementById('spot-text');
@@ -355,16 +376,55 @@ function textFor(v) {
   return lang === 'tl' ? (v.taglish || v.text) : v.text;
 }
 
+let ALL_BOOKS = [];
 function populateBooks() {
   const seen = new Set();
   const books = [];
   VERSES.forEach(v => { if (!seen.has(v.book)) { seen.add(v.book); books.push(v.book); } });
+  ALL_BOOKS = books;
   books.forEach(b => {
     const opt = document.createElement('option');
     opt.value = b;
     opt.textContent = b;
     bookFilterEl.appendChild(opt);
   });
+}
+
+function updateBookSuggestions() {
+  const qRaw = searchEl.value.trim();
+  if (qRaw.length < 3) {
+    bookSuggestionsEl.classList.remove('show');
+    bookSuggestionsEl.innerHTML = '';
+    return;
+  }
+  const q = qRaw.toLowerCase();
+  const starts = ALL_BOOKS.filter(b => b.toLowerCase().startsWith(q));
+  const contains = ALL_BOOKS.filter(b => !b.toLowerCase().startsWith(q) && b.toLowerCase().includes(q));
+  const matches = [...starts, ...contains].slice(0, 6);
+
+  if (matches.length === 0) {
+    bookSuggestionsEl.classList.remove('show');
+    bookSuggestionsEl.innerHTML = '';
+    return;
+  }
+
+  bookSuggestionsEl.innerHTML = matches.map(b =>
+    '<button type="button" class="book-chip" data-book="' + escapeHtmlAttr(b) + '">' + b + '</button>'
+  ).join('');
+  bookSuggestionsEl.classList.add('show');
+
+  bookSuggestionsEl.querySelectorAll('.book-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      bookFilterEl.value = chip.getAttribute('data-book');
+      searchEl.value = '';
+      bookSuggestionsEl.classList.remove('show');
+      bookSuggestionsEl.innerHTML = '';
+      render();
+    });
+  });
+}
+function escapeHtmlAttr(s) {
+  return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
 }
 
 function tightRef(s) {
@@ -469,13 +529,19 @@ document.getElementById('randomBtn').addEventListener('click', showRandomSpotlig
 document.getElementById('clearBtn').addEventListener('click', () => {
   searchEl.value = '';
   bookFilterEl.value = '';
+  bookSuggestionsEl.classList.remove('show');
+  bookSuggestionsEl.innerHTML = '';
   render();
 });
-searchEl.addEventListener('input', render);
+searchEl.addEventListener('input', () => {
+  render();
+  updateBookSuggestions();
+});
 searchEl.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     e.preventDefault();
     searchEl.blur();
+    bookSuggestionsEl.classList.remove('show');
     listEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 });
