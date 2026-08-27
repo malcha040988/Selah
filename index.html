@@ -198,6 +198,13 @@
     font-family: -apple-system, sans-serif;
   }
   .verse-text { font-size: 16px; line-height: 1.6; margin: 0 0 8px; }
+  mark {
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    padding: 0 2px;
+    border-radius: 3px;
+    font-weight: bold;
+  }
   .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .tag {
     font-size: 11px;
@@ -293,19 +300,61 @@ function populateBooks() {
   });
 }
 
+function normalizeRef(s) {
+  // strips spaces around colons/periods so "john 3 : 16", "john 3:16", "john3:16" all match
+  return s.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+function tightRef(s) {
+  // fully squashed version for typo-tolerant ref search, e.g. "john316" or "john 3 16"
+  return s.toLowerCase().replace(/[\s:.,]/g, '');
+}
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function highlight(text, q) {
+  if (!q) return escapeHtml(text);
+  const idx = text.toLowerCase().indexOf(q.toLowerCase());
+  if (idx === -1) return escapeHtml(text);
+  return escapeHtml(text.slice(0, idx)) +
+    '<mark>' + escapeHtml(text.slice(idx, idx + q.length)) + '</mark>' +
+    escapeHtml(text.slice(idx + q.length));
+}
+
 function render() {
-  const q = searchEl.value.trim().toLowerCase();
+  const qRaw = searchEl.value.trim();
+  const q = qRaw.toLowerCase();
+  const qTight = tightRef(qRaw);
   const book = bookFilterEl.value;
+
   let filtered = VERSES.filter(v => {
     const matchesBook = !book || v.book === book;
-    const matchesQuery = !q ||
+    if (!matchesBook) return false;
+    if (!q) return true;
+    const refTight = tightRef(v.ref);
+    return (
       v.text.toLowerCase().includes(q) ||
       v.taglish.toLowerCase().includes(q) ||
       v.ref.toLowerCase().includes(q) ||
       v.book.toLowerCase().includes(q) ||
-      v.tags.some(t => t.toLowerCase().includes(q));
-    return matchesBook && matchesQuery;
+      (qTight.length >= 2 && refTight.includes(qTight)) ||
+      v.tags.some(t => t.toLowerCase().includes(q))
+    );
   });
+
+  // Rank: exact/starting ref matches first, then other ref matches, then text matches
+  if (q) {
+    filtered.sort((a, b) => {
+      const score = (v) => {
+        const refL = v.ref.toLowerCase();
+        const refT = tightRef(v.ref);
+        if (refL === q || refT === qTight) return 0;
+        if (refL.startsWith(q) || refT.startsWith(qTight)) return 1;
+        if (refL.includes(q) || refT.includes(qTight)) return 2;
+        return 3;
+      };
+      return score(a) - score(b);
+    });
+  }
 
   countLabel.textContent = filtered.length + ' shown';
   listEl.innerHTML = '';
@@ -319,9 +368,10 @@ function render() {
     const card = document.createElement('div');
     card.className = 'verse-card';
     const tagsHtml = v.tags.map(t => '<span class="tag">' + t + '</span>').join('');
+    const bodyText = textFor(v);
     card.innerHTML =
-      '<div class="verse-ref">' + v.ref + '</div>' +
-      '<p class="verse-text">' + textFor(v) + '</p>' +
+      '<div class="verse-ref">' + highlight(v.ref, qRaw) + '</div>' +
+      '<p class="verse-text">' + highlight(bodyText, qRaw) + '</p>' +
       '<div class="tags">' + tagsHtml + '</div>';
     listEl.appendChild(card);
   });
@@ -340,6 +390,13 @@ document.getElementById('clearBtn').addEventListener('click', () => {
   render();
 });
 searchEl.addEventListener('input', render);
+searchEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    searchEl.blur();
+    listEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+});
 bookFilterEl.addEventListener('change', render);
 
 langEnBtn.addEventListener('click', () => {
