@@ -33,6 +33,28 @@
     --accent-dark: #8a6d3b;
     --accent-light: #f6ecd0;
     --border: #e6ddc9;
+    --header-bg: #1F2A44;
+    --header-text: #ffffff;
+    --header-muted: #cfd3dc;
+    --spot-bg: #1F2A44;
+    --spot-text: #ffffff;
+    color-scheme: light;
+  }
+  body.dark {
+    --bg: #14192b;
+    --card: #1e2540;
+    --ink: #ece9df;
+    --muted: #9aa0b4;
+    --accent: #e0b93f;
+    --accent-dark: #f0cf6f;
+    --accent-light: #33301c;
+    --border: #333c5c;
+    --header-bg: #0d1120;
+    --header-text: #f1f0ea;
+    --header-muted: #9aa0b4;
+    --spot-bg: #0d1120;
+    --spot-text: #f1f0ea;
+    color-scheme: dark;
   }
   * { box-sizing: border-box; }
   body {
@@ -43,14 +65,34 @@
     -webkit-font-smoothing: antialiased;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
+    transition: background 0.25s ease, color 0.25s ease;
   }
   header {
     padding: 20px 20px 16px;
     text-align: center;
     border-bottom: 1px solid var(--border);
-    background: var(--ink);
-    color: #fff;
+    background: var(--header-bg);
+    color: var(--header-text);
+    position: relative;
+    transition: background 0.25s ease;
   }
+  .theme-toggle {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.08);
+    color: var(--header-text);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .theme-toggle:active { transform: scale(0.92); }
   .logo-mark {
     display: inline-flex;
     align-items: center;
@@ -65,7 +107,7 @@
   }
   header p {
     margin: 6px 0 0;
-    color: #cfd3dc;
+    color: var(--header-muted);
     font-size: 12px;
     font-family: -apple-system, sans-serif;
   }
@@ -217,14 +259,15 @@
   .empty { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 14px; }
   .spotlight { max-width: 700px; margin: 20px auto 0; padding: 0 16px; }
   .spotlight-card {
-    background: var(--ink);
-    color: #fff;
+    background: var(--spot-bg);
+    color: var(--spot-text);
     border-radius: 12px;
     padding: 26px 22px;
     text-align: center;
+    transition: background 0.25s ease;
   }
   .spotlight-card .verse-ref { color: var(--accent); }
-  .spotlight-card .verse-text { color: #fff; font-size: 18px; }
+  .spotlight-card .verse-text { color: var(--spot-text); font-size: 18px; }
   footer {
     text-align: center;
     padding: 20px;
@@ -237,6 +280,7 @@
 <body>
 
 <header>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle day/night mode">🌙</button>
   <div class="logo-mark">
     <img src="icons/icon-192.png" alt="Selah logo">
   </div>
@@ -417,6 +461,39 @@ langTlBtn.addEventListener('click', () => {
 populateBooks();
 showRandomSpotlight();
 render();
+
+// --- Theme (day/night) toggle ---
+const themeToggle = document.getElementById('themeToggle');
+function applyTheme(theme) {
+  if (theme === 'dark') {
+    document.body.classList.add('dark');
+    themeToggle.textContent = '☀️';
+    themeToggle.setAttribute('title', 'Switch to day mode');
+  } else {
+    document.body.classList.remove('dark');
+    themeToggle.textContent = '🌙';
+    themeToggle.setAttribute('title', 'Switch to night mode');
+  }
+}
+function getPreferredTheme() {
+  const saved = localStorage.getItem('selah-theme');
+  if (saved === 'dark' || saved === 'light') return saved;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+let currentTheme = getPreferredTheme();
+applyTheme(currentTheme);
+themeToggle.addEventListener('click', () => {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('selah-theme', currentTheme);
+  applyTheme(currentTheme);
+});
+// Follow system changes only if the user hasn't chosen manually
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+  if (!localStorage.getItem('selah-theme')) {
+    currentTheme = e.matches ? 'dark' : 'light';
+    applyTheme(currentTheme);
+  }
+});
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
